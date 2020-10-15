@@ -1,0 +1,36 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "C/C++: g++.exe build active file",
+			"command": "C:\\CPP\\MinGW\\mingw-w64\\32_bit\\mingw32\\bin\\g++.exe",
+			"args": [
+				// "-g",
+				"-Wall",
+				// "--verbose",
+				"${file}",
+				"-LC:\\CPP\\GnuWin32\\lib\\",
+				"-lpodofo",
+				"-lfreetype",
+				"-lz",
+				"-lgdi32",
+				"-lws2_32",
+				"-o",
+				"${fileDirname}\\${fileBasenameNoExtension}.exe",
+				"-I",
+				"C:\\Users\\nukeo\\Documents\\cpp_libraries\\podofo-0.9.6"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		}
+	]
+}
