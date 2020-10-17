@@ -17,7 +17,7 @@
 				"-lgdi32",
 				"-lws2_32",
 				"-o",
-				"${fileDirname}\\${fileBasenameNoExtension}.exe",
+				"${workspaceFolder}\\pdf-word-counter.exe",
 				"-I",
 				"C:\\Users\\nukeo\\Documents\\cpp_libraries\\podofo-0.9.6"
 			],
