@@ -1,12 +1,16 @@
-﻿#include <assert.h>
+﻿#include "WordExtractor.h"
 
-#include "WordExtractor.h"
 
+void print_usage() {
+    printf("Usage: pdf-word-counter [PDF File Path]\n");
+}
 
 int main(int argc, char* argv[]) {
 
-    assert((argc > 1) && "No arguments passed to program.");
-    assert((argc < 3) && "Too many arguments given to program.");
+    if(argc != 2) {
+        print_usage();
+        exit(-1);
+    }
     
     WordExtractor wordExtractor;
     const char* pdfFilePath = argv[1];
@@ -15,7 +19,7 @@ int main(int argc, char* argv[]) {
         wordExtractor.Init(pdfFilePath);
     } catch(PoDoFo::PdfError & eCode) {
         /*
-         * We have to check if an error has occurred.
+         * We have to check if an error has occurred as per PoDoFo specification on error handling.
          * If yes, we return and print an error message
          * to the commandline.
          */
