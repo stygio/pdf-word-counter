@@ -1,8 +1,46 @@
-#include <iostream>
+﻿#include <iostream>
+#include <stdio.h>
 #include <string>
 #include <stack>
 #include <assert.h>
+#include <map>
+
 #include <podofo/podofo.h>
+
+std::map <const std::string, const std::string> symbolMap = {
+    // Ligatures
+    {"c4b3", "ij"},         // ij  - Latin Small Ligature IJ
+    {"c4b2", "IJ"},         // ij  - Latin Capital Ligature IJ
+    {"c593", "oe"},         // oe  - Latin Small Ligature OE
+    {"c592", "OE"},         // oe  - Latin Capital Ligature OE
+    {"efac80", "ff"},       // ff  - Latin Small Ligature FF
+    {"efac81", "fi"},       // fi  - Latin Small Ligature FI
+    {"efac82", "fl"},       // fl  - Latin Small Ligature FL
+    {"efac83", "ffi"},      // ffi - Latin Small Ligature FFI
+    {"efac84", "ffl"},      // ffl - Latin Small Ligature FI
+    {"efac85", "ft"},       // ft  - Latin Small Ligature FT
+    {"efac86", "st"},       // st  - Latin Small Ligature ST
+
+    // Polish symbols
+    {"c485", "\u0105"},     // ą - LATIN SMALL LETTER A WITH OGONEK
+    {"c484", "\u0104"},     // Ą - LATIN LARGE LETTER A WITH OGONEK
+    {"c487", "\u0107"},     // ć - LATIN SMALL LETTER C WITH ACUTE
+    {"e2809a", "\u0106"},   // Ć - LATIN LARGE LETTER C WITH ACUTE
+    {"c499", "\u0119"},     // ę - LATIN SMALL LETTER E WITH OGONEK
+    {"e280a0", "\u0118"},   // Ę - LATIN LARGE LETTER E WITH OGONEK
+    {"c582", "\u0142"},     // ł - LATIN SMALL LETTER L WITH STROKE
+    {"c5a0", "\u0141"},     // Ł - LATIN LARGE LETTER L WITH STROKE
+    {"c584", "\u0144"},     // ń - LATIN SMALL LETTER N WITH ACUTE
+    {"e280b9", "\u0143"},   // Ń - LATIN LARGE LETTER N WITH ACUTE
+    {"c3b3", "\u00F3"},     // ó - LATIN SMALL LETTER O WITH ACUTE
+    {"c393", "\u00D3"},     // Ó - LATIN LARGE LETTER O WITH ACUTE
+    {"c59b", "\u015b"},     // ś - LATIN SMALL LETTER S WITH ACUTE
+    {"e28098", "\u015a"},   // Ś - LATIN LARGE LETTER S WITH ACUTE
+    {"c5ba", "\u017a"},     // ź - LATIN SMALL LETTER Z WITH ACUTE
+    {"e284a2", "\u0179"},   // Ź - LATIN LARGE LETTER Z WITH ACUTE
+    {"c5bc", "\u017c"},     // ż - LATIN SMALL LETTER Z WITH DOT
+    {"e280ba", "\u017b"}    // Ź - LATIN LARGE LETTER Z WITH DOT
+};
 
 int main(int argc, char* argv[]) {
 
@@ -83,8 +121,6 @@ int main(int argc, char* argv[]) {
                                     if(!currentFont)
                                         throw "WARNING: Unable to create font!";
 
-                                    // std::cout << "Current Font:" << fontName.GetName() << std::endl;
-                                    // std::cout << "Current Encoding:" << currentFont->GetEncoding() << std::endl;
                                 }
                                 else if (strcmp(token, "Tj") == 0 || strcmp(token, "\'") == 0 || strcmp(token, "\"") == 0 || strcmp(token, "\\") == 0) {
                                     PoDoFo::PdfString tmpString = var.GetString();
@@ -100,13 +136,34 @@ int main(int argc, char* argv[]) {
                                     for(size_t i = 0; i < pdfArray.GetSize(); ++i) {
                                         if (pdfArray[i].IsString() || pdfArray[i].IsHexString()) {
                                             PoDoFo::PdfString tmpString = pdfArray[i].GetString();
-
-                                            // const PoDoFo::PdfEncoding* pEncoding = new PoDoFo::PdfMacRomanEncoding();
-                                            // PoDoFo::PdfFont *pFont = pdf.CreateFont("LiberationSerif", false, false, pEncoding );
-                                            // currentFont->GetEncoding()->ConvertToEncoding(tmpString, pFont);
                                             
                                             PoDoFo::PdfString unicode = currentFont->GetEncoding()->ConvertToUnicode(tmpString, currentFont);
-                                            std::cout << unicode.GetStringUtf8().c_str();
+                                            std::string dataString = unicode.GetStringUtf8().c_str();
+                                            std::string charCodes;
+
+                                            // Creating charCodes array of unsigned char hexadecimal codes to verify text symbols
+                                            for(size_t i = 0; i < dataString.length(); ++i) {
+                                                char hexCode[5];
+                                                sprintf(hexCode, "%02x", static_cast<unsigned char>(dataString[i]));
+                                                charCodes.append(hexCode);
+                                                // printf("%02x", static_cast<unsigned char>(dataString[i]));
+                                            }
+
+                                            // Replacing erroneous symbols with correct unicode values
+                                            size_t index;
+                                            for(auto symbolMap_iterator = symbolMap.begin(); symbolMap_iterator != symbolMap.end(); ++symbolMap_iterator) {
+                                                const std::string hexCodeString = symbolMap_iterator->first;
+                                                const std::string characterString = symbolMap_iterator->second;
+                                                while((index = charCodes.find(hexCodeString)) != std::string::npos) {
+                                                    std::string zeroReplacement(characterString.length(), '0');
+                                                    charCodes.replace(index, hexCodeString.length(), zeroReplacement);
+                                                    dataString.replace(index/2, hexCodeString.length()/2, characterString); //remove and replace from that position
+                                                }
+                                            }
+
+                                            // std::cout << charCodes << " " << dataString << std::endl;
+                                            std::cout << dataString;
+
                                         } 
                                         else if (pdfArray[i].IsNumber()) {
                                             // The horizontal displacement between glyphs is calculated based on the following formula:
