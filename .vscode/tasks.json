@@ -9,15 +9,20 @@
 				// "-g",
 				"-Wall",
 				// "--verbose",
+				
 				"${file}",
+				"${workspaceFolder}\\src\\WordExtractor.cpp",
+
 				"-LC:\\CPP\\GnuWin32\\lib\\",
 				"-lpodofo",
 				"-lfreetype",
 				"-lz",
 				"-lgdi32",
 				"-lws2_32",
+
 				"-o",
 				"${workspaceFolder}\\pdf-word-counter.exe",
+
 				"-I",
 				"C:\\Users\\nukeo\\Documents\\cpp_libraries\\podofo-0.9.6"
 			],
