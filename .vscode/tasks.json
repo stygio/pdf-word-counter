@@ -10,7 +10,7 @@
 				"-Wall",
 				// "--verbose",
 				
-				"${file}",
+				"${workspaceFolder}\\src\\main.cpp",
 				"${workspaceFolder}\\src\\WordExtractor.cpp",
 
 				"-LC:\\CPP\\GnuWin32\\lib\\",

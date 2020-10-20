@@ -9,6 +9,7 @@
 WordExtractor::WordExtractor() {}
 WordExtractor::~WordExtractor() {}
 
+
 void WordExtractor::Init(const char* documentPath) {
     if(!documentPath)
         throw "No file path passed to WordExtractor::Init.";
@@ -22,6 +23,36 @@ void WordExtractor::Init(const char* documentPath) {
         this->ExtractWords(&pdfDocument, p_pdfPage);
     }
 }
+
+
+std::string WordExtractor::CorrectSymbols(PoDoFo::PdfString unicodeDataString) {
+    // Convert to UTF8 and initialize string of unsigned char code representations
+    std::string dataString = unicodeDataString.GetStringUtf8().c_str();
+    std::string charCodes;
+
+    // Creating charCodes array of unsigned char hexadecimal codes to verify text symbols
+    for(size_t i = 0; i < dataString.length(); ++i) {
+        char hexCode[5];
+        sprintf(hexCode, "%02x", static_cast<unsigned char>(dataString[i]));
+        charCodes.append(hexCode);
+        // printf("%02x", static_cast<unsigned char>(dataString[i]));
+    }
+
+    // Replacing erroneous symbols with correct unicode values
+    size_t index;
+    for(auto symbolMap_iterator = symbolMap.begin(); symbolMap_iterator != symbolMap.end(); ++symbolMap_iterator) {
+        const std::string hexCodeString = symbolMap_iterator->first;
+        const std::string characterString = symbolMap_iterator->second;
+        while((index = charCodes.find(hexCodeString)) != std::string::npos) {
+            std::string zeroReplacement(characterString.length(), '0');
+            charCodes.replace(index, hexCodeString.length(), zeroReplacement);
+            dataString.replace(index/2, hexCodeString.length()/2, characterString);
+        }
+    }
+
+    return dataString;
+}
+
 
 void WordExtractor::ExtractWords(PoDoFo::PdfMemDocument* p_pdfDocument, PoDoFo::PdfPage* p_pdfPage) {
 
@@ -76,7 +107,7 @@ void WordExtractor::ExtractWords(PoDoFo::PdfMemDocument* p_pdfDocument, PoDoFo::
                     if (!textBlockFlag)
                         std::cout << "WARNING: Encountered PoDoFo::EPDFContentsType_Keyword 'ET' without preceeding 'BT' on page!" << std::endl;
 
-                    // textBlockFlag = false;
+                    textBlockFlag = false;
                 }
 
                 // Text processing
@@ -97,11 +128,10 @@ void WordExtractor::ExtractWords(PoDoFo::PdfMemDocument* p_pdfDocument, PoDoFo::
 
                     }
                     else if (strcmp(token, "Tj") == 0 || strcmp(token, "\'") == 0 || strcmp(token, "\"") == 0 || strcmp(token, "\\") == 0) {
-                        PoDoFo::PdfString tmpString = var.GetString();
+                        PoDoFo::PdfString pdfString = var.GetString();
 
-                        PoDoFo::PdfString unicode = currentFont->GetEncoding()->ConvertToUnicode(tmpString, currentFont);
-                        std::cout << unicode.GetStringUtf8().c_str(); 
-                        // std::cout << " " << token << std::endl;
+                        std::string dataString = this->CorrectSymbols(currentFont->GetEncoding()->ConvertToUnicode(pdfString, currentFont));
+                        std::cout << dataString;
 
                     }
                     else if (strcmp(token, "TJ") == 0) {
@@ -109,35 +139,10 @@ void WordExtractor::ExtractWords(PoDoFo::PdfMemDocument* p_pdfDocument, PoDoFo::
 
                         for(size_t i = 0; i < pdfArray.GetSize(); ++i) {
                             if (pdfArray[i].IsString() || pdfArray[i].IsHexString()) {
-                                PoDoFo::PdfString tmpString = pdfArray[i].GetString();
+                                PoDoFo::PdfString pdfString = pdfArray[i].GetString();
                                 
-                                PoDoFo::PdfString unicode = currentFont->GetEncoding()->ConvertToUnicode(tmpString, currentFont);
-                                std::string dataString = unicode.GetStringUtf8().c_str();
-                                std::string charCodes;
-
-                                // Creating charCodes array of unsigned char hexadecimal codes to verify text symbols
-                                for(size_t i = 0; i < dataString.length(); ++i) {
-                                    char hexCode[5];
-                                    sprintf(hexCode, "%02x", static_cast<unsigned char>(dataString[i]));
-                                    charCodes.append(hexCode);
-                                    // printf("%02x", static_cast<unsigned char>(dataString[i]));
-                                }
-
-                                // Replacing erroneous symbols with correct unicode values
-                                size_t index;
-                                for(auto symbolMap_iterator = symbolMap.begin(); symbolMap_iterator != symbolMap.end(); ++symbolMap_iterator) {
-                                    const std::string hexCodeString = symbolMap_iterator->first;
-                                    const std::string characterString = symbolMap_iterator->second;
-                                    while((index = charCodes.find(hexCodeString)) != std::string::npos) {
-                                        std::string zeroReplacement(characterString.length(), '0');
-                                        charCodes.replace(index, hexCodeString.length(), zeroReplacement);
-                                        dataString.replace(index/2, hexCodeString.length()/2, characterString); //remove and replace from that position
-                                    }
-                                }
-
-                                // std::cout << charCodes << " " << dataString << std::endl;
+                                std::string dataString = this->CorrectSymbols(currentFont->GetEncoding()->ConvertToUnicode(pdfString, currentFont));
                                 std::cout << dataString;
-
                             } 
                             else if (pdfArray[i].IsNumber()) {
                                 // The horizontal displacement between glyphs is calculated based on the following formula:

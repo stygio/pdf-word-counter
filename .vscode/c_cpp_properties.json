@@ -14,8 +14,7 @@
             "compilerPath": "C:\\CPP\\MinGW\\mingw-w64\\32_bit\\mingw32\\bin\\gcc.exe",
             "cStandard": "gnu18",
             "cppStandard": "gnu++14",
-            "intelliSenseMode": "gcc-x86",
-            "compileCommands": "C:/Users/nukeo/Documents/cpp_libraries/podofo-0.9.6/build/compile_commands.json"
+            "intelliSenseMode": "gcc-x86"
         }
     ],
     "version": 4

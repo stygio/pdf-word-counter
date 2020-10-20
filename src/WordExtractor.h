@@ -12,6 +12,7 @@ class WordExtractor {
         void Init(const char* documentPath);
 
     private:
+        std::string CorrectSymbols(PoDoFo::PdfString unicodeDataString);
         void ExtractWords(PoDoFo::PdfMemDocument* pdfDocument, PoDoFo::PdfPage* pdfPage);
 
 };
