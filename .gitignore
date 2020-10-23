@@ -1,2 +1,5 @@
 *.pdf
 *.exe
+test.cpp
+WindowsWcharSupport.h
+WindowsWcharSupport.cpp

@@ -12,6 +12,7 @@
 				
 				"${workspaceFolder}\\src\\main.cpp",
 				"${workspaceFolder}\\src\\WordExtractor.cpp",
+				"${workspaceFolder}\\src\\WindowsWcharSupport.cpp",
 
 				"-LC:\\CPP\\GnuWin32\\lib\\",
 				"-lpodofo",

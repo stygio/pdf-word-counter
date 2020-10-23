@@ -1,6 +1,9 @@
 ﻿#include <iostream>
 #include <stdio.h>
 #include <stack>
+#include <codecvt>
+#include <locale>
+#include <uchar.h>
 
 #include "WordExtractor.h"
 #include "UnicodeSymbols.h"
@@ -25,12 +28,12 @@ void WordExtractor::Init(const char* documentPath) {
 }
 
 
-std::string WordExtractor::CorrectSymbols(PoDoFo::PdfString unicodeDataString) {
+std::string WordExtractor::UnicodePdfString_to_StdString(PoDoFo::PdfString unicodeDataString) {
     // Convert to UTF8 and initialize string of unsigned char code representations
     std::string dataString = unicodeDataString.GetStringUtf8().c_str();
     std::string charCodes;
 
-    // Creating charCodes array of unsigned char hexadecimal codes to verify text symbols
+    // Creating charCodes array of unsigned char byte hex codes to verify text symbols
     for(size_t i = 0; i < dataString.length(); ++i) {
         char hexCode[5];
         sprintf(hexCode, "%02x", static_cast<unsigned char>(dataString[i]));
@@ -38,11 +41,11 @@ std::string WordExtractor::CorrectSymbols(PoDoFo::PdfString unicodeDataString) {
         // printf("%02x", static_cast<unsigned char>(dataString[i]));
     }
 
-    // Replacing erroneous symbols with correct unicode values
+    // Replacing erroneous symbols with correct unicode values using UnicodeSymbols::symbolMap
     size_t index;
-    for(auto symbolMap_iterator = symbolMap.begin(); symbolMap_iterator != symbolMap.end(); ++symbolMap_iterator) {
-        const std::string hexCodeString = symbolMap_iterator->first;
-        const std::string characterString = symbolMap_iterator->second;
+    for(auto it_symbolMap = symbolMap.begin(); it_symbolMap != symbolMap.end(); ++it_symbolMap) {
+        const std::string hexCodeString = it_symbolMap->first;
+        const std::string characterString = it_symbolMap->second;
         while((index = charCodes.find(hexCodeString)) != std::string::npos) {
             std::string zeroReplacement(characterString.length(), '0');
             charCodes.replace(index, hexCodeString.length(), zeroReplacement);
@@ -50,12 +53,39 @@ std::string WordExtractor::CorrectSymbols(PoDoFo::PdfString unicodeDataString) {
         }
     }
 
-    return dataString;
+    // Defining codeconverter type for wstring_convert
+    typedef std::codecvt_utf8_utf16<char16_t> ccvt_c16t;
+    // Constructs an object that returns byte_err or wide_err on failure to convert, instead of throwing an exception.
+    std::wstring_convert<ccvt_c16t, char16_t> converter ("", u"");
+    // Get u16string version of dataString with char16_t encoding (inherently 16bit/2bytes)
+    std::u16string u16_DataString = converter.from_bytes(dataString);
+
+    // Constant character definitions
+    const char16_t capital_A = u'A';
+    const char16_t capital_Z = u'Z';
+    const char16_t small_A = u'a';
+    const char16_t small_Z = u'z';
+    const char16_t capitalSmallDifference = small_A - capital_A; 
+    const char16_t apostrophe = u'\'';
+    const char16_t latin_Start = u'\u00c0';
+    const char16_t latin_End = u'\u024f';
+
+    // Process characters in u16_DataString
+    for(char16_t& c16: u16_DataString) {
+        // Cast standard english alphabet to lower case characters
+        if(capital_A <= c16 and c16 <= capital_Z)
+            c16 += capitalSmallDifference;
+        // Check if the character belongs to one of the allowed ranges (alphabetic). If not, replace with a space
+        else if(not ((small_A <= c16 and c16 <= small_Z) or (c16 == apostrophe) or (latin_Start <= c16 and c16 <= latin_End)))
+            c16 = u' ';
+    }
+
+    // Return std::string version of processed u16_DataString
+    return converter.to_bytes(u16_DataString);
 }
 
 
 void WordExtractor::ExtractWords(PoDoFo::PdfMemDocument* p_pdfDocument, PoDoFo::PdfPage* p_pdfPage) {
-
     // Print the current page and initialize a PdfContentsTokenizer
     std::cout << std::endl << "Page " << p_pdfPage->GetPageNumber() << std::endl;
     PoDoFo::PdfContentsTokenizer pdfContentsTokenizer(p_pdfPage);
@@ -130,7 +160,7 @@ void WordExtractor::ExtractWords(PoDoFo::PdfMemDocument* p_pdfDocument, PoDoFo::
                     else if (strcmp(token, "Tj") == 0 || strcmp(token, "\'") == 0 || strcmp(token, "\"") == 0 || strcmp(token, "\\") == 0) {
                         PoDoFo::PdfString pdfString = var.GetString();
 
-                        std::string dataString = this->CorrectSymbols(currentFont->GetEncoding()->ConvertToUnicode(pdfString, currentFont));
+                        std::string dataString = this->UnicodePdfString_to_StdString(currentFont->GetEncoding()->ConvertToUnicode(pdfString, currentFont));
                         std::cout << dataString;
 
                     }
@@ -141,7 +171,7 @@ void WordExtractor::ExtractWords(PoDoFo::PdfMemDocument* p_pdfDocument, PoDoFo::
                             if (pdfArray[i].IsString() || pdfArray[i].IsHexString()) {
                                 PoDoFo::PdfString pdfString = pdfArray[i].GetString();
                                 
-                                std::string dataString = this->CorrectSymbols(currentFont->GetEncoding()->ConvertToUnicode(pdfString, currentFont));
+                                std::string dataString = this->UnicodePdfString_to_StdString(currentFont->GetEncoding()->ConvertToUnicode(pdfString, currentFont));
                                 std::cout << dataString;
                             } 
                             else if (pdfArray[i].IsNumber()) {
