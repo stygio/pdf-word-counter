@@ -17,9 +17,27 @@ const std::map <const std::string, const std::string> symbolMap = {
     {"efac85", "ft"},       // ft  - Latin Small Ligature FT
     {"efac86", "st"},       // st  - Latin Small Ligature ST
 
-    // Text symbols
+    // Text symbols, punctuation
     {"e28099", "\u0027"},   // ' - RIGHT SINGLE QUOTATION MARK (mapped to apostrophe)
     {"e280b2", "\u0027"},   // ' - PRIME (mapped to apostrophe)
+
+    // Spaces
+    {"c2a0", " "},      // No-Break Space (NBSP)
+    {"e28080", " "},    // En Quad
+    {"e28081", " "},    // Em Quad
+    {"e28082", " "},    // En Space
+    {"e28083", " "},    // Em Space
+    {"e28084", " "},    // Three-Per-Em Space
+    {"e28085", " "},    // Four-Per-Em Space
+    {"e28086", " "},    // Six-Per-Em Space
+    {"e28087", " "},    // Figure Space
+    {"e28088", " "},    // Punctuation Space
+    {"e28089", " "},    // Thin Space
+    {"e2808a", " "},    // Hair Space
+    {"e280af", " "},    // Narrow No-Break Space (NNBSP)
+    {"e2819f", " "},    // Medium Mathematical Space (MMSP)
+    {"e38080", " "},    // Ideographic Space
+    
 
     // Polish symbols
     {"c485", "\u0105"},     // ą - LATIN SMALL LETTER A WITH OGONEK
